@@ -6,7 +6,8 @@ This repository contains scripts used as part of a research project to analyse m
 Folder structure
 ----------------
 
-* /data - contains input and intermediate data
+* /input_data - input data
+* /data - intermediate data
 * /scripts - scripts that generate intermediate data
 * /R - helper functions in R
 * /analysis - scripts used to analyse the data (typically outputs figures or tables)
