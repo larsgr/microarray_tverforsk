@@ -2,7 +2,7 @@
 # generate blast database for each species
 #
 
-DATAPATH="/mnt/users/mariansc/microarray_tverforsk"
+DATAPATH="input_data"
 
 BLASTPARAM="-outfmt '6 qseqid sseqid pident length mismatch gapopen qstart qend qlen sstart send slen evalue bitscore' -num_threads 12 -perc_identity 95"
 
