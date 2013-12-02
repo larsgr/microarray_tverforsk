@@ -48,3 +48,61 @@ X <- data.frame(row.names=names(X), genes=as.integer(X))
 print(xtable(X),type="html")
 
 
+######
+# for barley
+
+filename <- "data/barley/blast_results/GPL1340_barley.all.cds.blastn"
+
+bt <- read.table(filename, header=F,sep="\t",col.names=blastCols, stringsAsFactors=F)
+  
+# Note: barley reference does not contain multiple isoforms
+  
+# pick the best hit for each query
+btUnique <- bt[ bt$qseqid != c("xxx", bt$qseqid[1:(length(bt$qseqid)-1)]),]
+
+length(unique(btUnique$sseqid)) # number of genes with hit
+
+
+
+#########
+# for Maize
+
+Zm_files <- system("find data/maize/blast_results -name *.blastn",intern=T)
+
+allTables <- list()
+
+for(filename in Os_files){
+  
+  bt <- read.table(filename, header=F,sep="\t",col.names=blastCols, stringsAsFactors=F)
+  
+  # # Check if target sequence matches multiple genome sequences:
+  # table(table(bt$qseqid))
+  # # Check if multiple target sequences matches same genome sequence:
+  # table(table(bt$sseqid))
+  
+  # remove isoform numbers from sseqid
+  bt$sseqid_noiso <- sub("_T[0-9]+$","", bt$sseqid, perl=TRUE)
+  
+  # pick the best hit for each query
+  btUnique <-bt[ bt$qseqid != c("xxx", bt$qseqid[1:(length(bt$qseqid)-1)]),]
+  
+  
+  allTables[[filename]] <- btUnique$sseqid_noiso
+}
+
+n <- length(Zm_files)
+platformName <- substr(Zm_files,regexpr("GPL[0-9]+",Zm_files), regexpr("_maize.WGS_cds.blastn$",Zm_files)-1)
+
+uniGene <- unique(unlist(allTables))
+inDataSet <- data.frame(row.names=uniGene)
+for( i in 1:n ){
+  inDataSet[,platformName[i]] <- uniGene %in% unique( allTables[[i]] )
+}
+
+barplot(table( rowSums(inDataSet)),xlab="Number of platforms containing same gene")
+
+
+library(xtable)
+X <- sort(colSums(inDataSet),decreasing=T)
+X <- data.frame(row.names=names(X), genes=as.integer(X))
+print(xtable(X),type="html")
