@@ -46,7 +46,7 @@ mkdir data/maize/blast_results
 for TARGET_FASTA in $(find $DATAPATH/maize/target_fastas/ -name GPL*)
 do
   GPL=$(echo $TARGET_FASTA | sed 's/.*\(GPL[0-9]*\).*/\1/')
-  BLASTRES="data/maize/blast_results/"$GPL"_rice.all.cds.blastn"
+  BLASTRES="data/maize/blast_results/"$GPL"_maize.WGS_cds.blastn"
   blastn -query $TARGET_FASTA \
          -db data/maize/db/WGS_cds \
          -outfmt '6 qseqid sseqid pident length mismatch gapopen qstart qend qlen sstart send slen evalue bitscore' -num_threads 12 -perc_identity 95 \
@@ -60,7 +60,7 @@ mkdir data/barley/blast_results
 for TARGET_FASTA in $(find $DATAPATH/barley/target_fastas/ -name GPL*)
 do
   GPL=$(echo $TARGET_FASTA | sed 's/.*\(GPL[0-9]*\).*/\1/')
-  BLASTRES="data/barley/blast_results/"$GPL"_rice.all.cds.blastn"
+  BLASTRES="data/barley/blast_results/"$GPL"_barley.all.cds.blastn"
   blastn -query $TARGET_FASTA \
          -db data/barley/db/all.cds \
          -outfmt '6 qseqid sseqid pident length mismatch gapopen qstart qend qlen sstart send slen evalue bitscore' -num_threads 12 -perc_identity 95 \
