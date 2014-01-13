@@ -35,7 +35,7 @@ barleyPlatform <- "GPL1340"
 ricePlatforms <- c( "GPL14568", "GPL16106", "GPL2025","GPL7344" )
 maizePlatforms <- c( "GPL1992", "GPL1993", "GPL4032", "GPL6438", "GPL8162", "GPL8163" )
 
-seriesFileTbl <- data.frame( platform=platforms,file=GSE_files)
+seriesFileTbl <- data.frame( platform=platforms,file=GSE_files, stringsAsFactors = F)
 seriesFileTbl$species[seriesFileTbl$platform %in% barleyPlatform] <- "barley" 
 seriesFileTbl$species[seriesFileTbl$platform %in% ricePlatforms] <- "rice" 
 seriesFileTbl$species[seriesFileTbl$platform %in% maizePlatforms] <- "maize"
@@ -48,15 +48,14 @@ seriesFileTbl <- seriesFileTbl[ !(is.na(seriesFileTbl$species) | seriesFileTbl$f
 
 
 ###############################
-# Generate a vector of blast files and name withthe corresponding platforms
+# Generate a vector of blast files and name with the corresponding platforms
 
 blastFile <- c( system("find data/rice/blast_results -name *.blastn",intern=T),
                 system("find data/maize/blast_results -name *.blastn",intern=T),
                 system("find data/barley/blast_results -name *.blastn",intern=T) )
 
 # get corresponding platform from the filename
-names(blastFile) <- substr(blastFileTbl$file,regexpr("GPL[0-9]+",blastFileTbl$file), 
-                           regexpr("_[^/]+\\.blastn",blastFileTbl$file)-1)
+names(blastFile) <- substr(blastFile,regexpr("GPL[0-9]+",blastFile), regexpr("_[^/]+\\.blastn",blastFile)-1)
 
 
 # Merge, log transform if necessary, and normalize series files (from same platform)
@@ -91,7 +90,7 @@ probeStats <- list() #use this to store some statistics on the probe mapping
 
 # for each species
 for( species in unique(seriesFileTbl$species)){
-  speciesGeneMatrix <- null
+  speciesGeneMatrix <- NULL
   # for each platform
   for( platform in unique(seriesFileTbl$platform[ seriesFileTbl$species == species ])){
     
@@ -99,17 +98,21 @@ for( species in unique(seriesFileTbl$species)){
     cat("\nMerging series matrices for platform",platform,"\n")
     platformProbeMatrix <- mergeSeriesMatrices( seriesFileTbl$file[seriesFileTbl$platform==platform] )
     
-    # map probes to genes
+    # Read probe mapping from blast results
     cat("\nReading probe mapping...")
     probe2genes <- getProbeMapping(blastFile[platform], removeIsoformsFun[[species]])
+
+    # collect probe mapping statistics
+    probeStats[[platform]] <- list( probesPerGene = table(table(unlist(probe2genes))),
+                                   genesPerProbe = table(unlist(lapply(probe2genes, length))),
+                                   probesMapped = table(row.names(platformProbeMatrix)%in%names(probe2genes)) )
+    
+
+    # Convert probe values to gene values
     cat("\nConverting probe values to gene values...")
     platformGeneMatrix <- convertProbe2GeneValues(platformProbeMatrix, probe2genes)
     cat("done\n")
     
-    # collect interresting statistics
-    probeStats[[species]] <- list( probesPerGene = table(table(unlist(probe2genes))),
-                                   genesPerProbe = table(unlist(lapply(probe2genes, length)))
-                                   probesMapped = table(row.names(inM)%in%names(probe2genes)) )
     
     # merge matrices for
     if( is.null(speciesGeneMatrix) ){
@@ -126,20 +129,23 @@ for( species in unique(seriesFileTbl$species)){
   
   # normalize species matrix
   cat("\nNormalizing species matrix...")
-  speciesGeneMatrix <- normalize.quantiles( speciesGeneMatrix )
+  tmp <- normalize.quantiles(speciesGeneMatrix)
+  rownames(tmp) <- rownames(speciesGeneMatrix)
+  colnames(tmp) <- colnames(speciesGeneMatrix)
+  speciesGeneMatrix <- tmp
+  rm(tmp)
   
   # save gene expression matrix
   geneMatrixFile <- file.path("data",species,"geneMatrix.txt")
   cat("done\nSaving to file",outFile)
-  write.table( normalize.quantiles( removeNArows( speciesGeneMatrix ) ),
-               file=outFile,quote=F,row.names=T,col.names=T,sep="\t")
+  write.table( speciesGeneMatrix, file=geneMatrixFile,quote=F,row.names=T,col.names=T,sep="\t")
   
   
   # generate MI/CLR script
   outdir  <- file.path( "data",species)
   script <- generateBatchScript( jobName = paste("mi_",species,sep=""), 
                                  command = createMICLRscript(geneMatrixFile, outdir) )
-  cat(script, file = file.path("scripts",paste("miCalc_",species,".sh",sep="")))  
+  cat(script, file = file.path("scripts",paste("mi_",species,".sh",sep="")))  
 }
 
 save(probeStats, file = "output/probeMappingStats.RData")
