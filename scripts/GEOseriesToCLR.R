@@ -137,7 +137,7 @@ for( species in unique(seriesFileTbl$species)){
   
   # save gene expression matrix
   geneMatrixFile <- file.path("data",species,"geneMatrix.txt")
-  cat("done\nSaving to file",outFile)
+  cat("done\nSaving to file",geneMatrixFile)
   write.table( speciesGeneMatrix, file=geneMatrixFile,quote=F,row.names=T,col.names=T,sep="\t")
   
   
