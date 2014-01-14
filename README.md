@@ -11,7 +11,7 @@ Since different microarrays use different probes it is necessary to map the prob
 Folder structure
 ----------------
 
-* **/input_data** - input data (gene expression)
+* **/input_data** - input data (gene expression and fasta files not included)
 * **/scripts** - main scripts
 * **/data** - generated data
 * **/R** - helper functions in R
