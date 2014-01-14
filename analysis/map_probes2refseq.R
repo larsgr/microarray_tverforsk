@@ -71,7 +71,7 @@ Zm_files <- system("find data/maize/blast_results -name *.blastn",intern=T)
 
 allTables <- list()
 
-for(filename in Os_files){
+for(filename in Zm_files){
   
   bt <- read.table(filename, header=F,sep="\t",col.names=blastCols, stringsAsFactors=F)
   
