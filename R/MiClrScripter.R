@@ -14,8 +14,10 @@ if [ ! -d %OUTPUTPATH%/temp ]; then
   mkdir %OUTPUTPATH%/temp
 fi
 
-# convert NA to magic number 1e+30
-sed 's/NA/1e+30/g' %INPUTFILEPATH% > %OUTPUTPATH%/temp/microarray_file.txt
+# convert geneMatrix format (header=T, row.names=T, sep='\t', na='NA')
+# to format expected by genepair (header=F, row.names=F, sep=' ', na='1e+30')
+# remove first line | cut first column | substitute tabs with spaces | substitute NA with 1e+30
+tail -n+2 %INPUTFILEPATH% | cut -f1 --complement | sed -e's/\t/ /g' -e's/NA/1e+30/g' > %OUTPUTPATH%/temp/microarray_file.txt
 
 # get ngenes
 NGENES=$(cat %OUTPUTPATH%/temp/microarray_file.txt | wc -l)
